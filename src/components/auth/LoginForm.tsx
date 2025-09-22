@@ -6,7 +6,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { isClientOnlyMode, loginUser, setCurrentUser } from '@/lib/persistence.client';
 
 type Role = 'gerente' | 'usuario';
 
@@ -20,18 +19,13 @@ export default function LoginForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (isClientOnlyMode()) {
-      const res = loginUser({ email, password });
-      if (!res.ok) return setError(res.error);
-      try { setCurrentUser(res.user as any); } catch {}
-      window.location.href = res.user.role === 'gerente' ? '/gerente' : '/usuario';
-      return;
-    }
-    const resp = await fetch('/api/crud/users/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password })
+    const res = await fetch('/api/crud/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
-    const data = await resp.json();
-    if (!resp.ok) return setError(data.error || 'Error');
+    const data = await res.json();
+    if (!res.ok) return setError(data.error || 'Error');
     try { localStorage.setItem('currentUser', JSON.stringify(data.user)); } catch {}
     window.location.href = data.user.role === 'gerente' ? '/gerente' : '/usuario';
   };

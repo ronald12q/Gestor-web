@@ -6,6 +6,13 @@
       "email": "gerente@local.com",
       "password": "123456",
       "role": "gerente"
+    },
+    {
+      "id": 2,
+      "name": "Usuario1",
+      "email": "Usuario@test.com",
+      "password": "123456",
+      "role": "usuario"
     }
   ]
 }

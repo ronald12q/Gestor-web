@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { isClientOnlyMode, registerUser } from '@/lib/persistence.client';
 type Role = 'gerente' | 'usuario';
 
 export default function RegisterForm() {
@@ -19,19 +18,13 @@ export default function RegisterForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (isClientOnlyMode()) {
-      const res = registerUser({ name, email, password, role });
-      if (!res.ok) { setError(res.error); return; }
-      setSuccess(`Usuario creado: ${res.user.name}`);
-      setName(''); setEmail(''); setPassword('');
-      setTimeout(() => setSuccess(null), 3000);
-      return;
-    }
-    const resp = await fetch('/api/crud/users/register', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role })
+    const res = await fetch('/api/crud/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role })
     });
-    const data = await resp.json();
-    if (!resp.ok) return setError(data.error || 'Error');
+    const data = await res.json();
+    if (!res.ok) return setError(data.error || 'Error');
     setSuccess(`Usuario creado: ${data.user.name}`);
     setName(''); setEmail(''); setPassword('');
     setTimeout(() => setSuccess(null), 3000);

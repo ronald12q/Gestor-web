@@ -1,7 +1,8 @@
 /*
   archivo global css que podemos usar para definir paramentros globales en este caso lo usamos 
   definir un color de fondo especifico y que la pagina se adapte a diferente pantallas(responsiva)
-*/
+hay tres advertencias por eso creo que esta rojo 
+  */
 
 @tailwind base;
 @tailwind components;

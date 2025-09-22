@@ -1,3 +1,17 @@
 {
-  "projects": []
+  "projects": [
+    {
+      "id": 1,
+      "name": "lavar los platos",
+      "tasks": [
+        {
+          "id": 1,
+          "title": "Ordenarlos",
+          "completed": true,
+          "assignedToName": "Usuario1"
+        }
+      ],
+      "createdByName": "gerente"
+    }
+  ]
 }

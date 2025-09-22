@@ -8,7 +8,6 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isClientOnlyMode, getProjects as getLocalProjects, setTaskCompleted as setLocalTaskCompleted } from '@/lib/persistence.client';
 
 type Task = { id: number; title: string; completed: boolean; assignedToName?: string };
 type Project = { id: number; name: string; tasks: Task[]; assignedToName?: string };
@@ -19,13 +18,9 @@ export default function UsuarioDashboard() {
   const router = useRouter();
 
   const load = async () => {
-    if (isClientOnlyMode()) {
-      setProjects(getLocalProjects());
-    } else {
-      const res = await fetch('/api/crud/projects');
-      const data = await res.json();
-      setProjects(data.projects || []);
-    }
+    const res = await fetch('/api/crud/projects');
+    const data = await res.json();
+    setProjects(data.projects || []);
   };
   useEffect(() => {
     load();
@@ -47,7 +42,7 @@ export default function UsuarioDashboard() {
         const matchProject = p.assignedToName ? norm(p.assignedToName) === uname : false;
         const userTasks = (p.tasks || []).filter((t) => t.assignedToName && norm(t.assignedToName) === uname);
         if (!matchProject && userTasks.length === 0) return null;
-  // Mostrar siempre solo las tareas del usuario; ocultar tareas sin asignar incluso si el proyecto está asignado
+  
         return {
           ...p,
           tasks: userTasks,
@@ -65,7 +60,7 @@ export default function UsuarioDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Panel de usuario</h1>
-          {currentUser && <p className="text-gray-300">Bienvenido, {currentUser.name} — Progreso: {percent}%</p>}
+          {currentUser && <p className="text-gray-300">Bienvenido, {currentUser.name} </p>}
         </div>
   <button onClick={logout} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-xl">Cerrar Sesión</button>
       </div>
@@ -111,13 +106,8 @@ export default function UsuarioDashboard() {
                         <button
                           title={t.completed ? 'Marcar pendiente' : 'Marcar completada'}
                           onClick={async () => {
-                            if (isClientOnlyMode()) {
-                              setLocalTaskCompleted(p.id, t.id, !t.completed);
-                              await load();
-                            } else {
-                              await fetch(`/api/crud/projects/${p.id}/tasks/${t.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: !t.completed }) });
-                              await load();
-                            }
+                            await fetch(`/api/crud/projects/${p.id}/tasks/${t.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: !t.completed }) });
+                            await load();
                           }}
                           className={`px-3 py-2 rounded-xl ${t.completed ? 'bg-green-700 text-white' : 'bg-slate-700 text-slate-200'} hover:opacity-90`}
                         >

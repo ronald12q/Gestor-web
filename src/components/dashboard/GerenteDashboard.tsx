@@ -10,7 +10,6 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import InputModal from '@/components/InputModal';
 import IconButton from '@/components/IconButton';
-import { isClientOnlyMode, getProjects as getLocalProjects, createProject as createLocalProject, renameProject as renameLocalProject, deleteProject as deleteLocalProject, addTask as addLocalTask, renameTask as renameLocalTask, deleteTask as deleteLocalTask, setTaskCompleted as setLocalTaskCompleted, assignTask as assignLocalTask, assignProject as assignLocalProject } from '@/lib/persistence.client';
 
 type Task = { id: number; title: string; completed: boolean; assignedToName?: string };
 type Project = { id: number; name: string; tasks: Task[]; createdByName?: string; assignedToName?: string };
@@ -27,13 +26,9 @@ export default function GerenteDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      if (isClientOnlyMode()) {
-        setProjects(getLocalProjects());
-      } else {
-        const res = await fetch('/api/crud/projects');
-        const data = await res.json();
-        setProjects(data.projects || []);
-      }
+      const res = await fetch('/api/crud/projects');
+      const data = await res.json();
+      setProjects(data.projects || []);
     } finally { setLoading(false); }
   }, []);
 
@@ -56,23 +51,18 @@ export default function GerenteDashboard() {
         if (raw) ownerName = (JSON.parse(raw)?.name as string) || '';
       } catch {}
     }
-    if (isClientOnlyMode()) {
-      createLocalProject(name, ownerName);
-      await load();
-      return;
-    }
     const res = await fetch('/api/crud/projects/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, createdByName: ownerName }) });
     if (res.ok) { await load(); }
   };
   const renameProject = async (projectId: number, newName: string) => {
     const name = newName.trim();
     if (!name) return;
-    if (isClientOnlyMode()) { renameLocalProject(projectId, name); await load(); return; }
-    await fetch(`/api/crud/projects/${projectId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }); await load();
+    await fetch(`/api/crud/projects/${projectId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    await load();
   };
   const removeProject = useCallback(async (projectId: number) => {
-    if (isClientOnlyMode()) { deleteLocalProject(projectId); await load(); return; }
-    await fetch(`/api/crud/projects/${projectId}`, { method: 'DELETE' }); await load();
+    await fetch(`/api/crud/projects/${projectId}`, { method: 'DELETE' });
+    await load();
   }, [load]);
 
   const logout = () => { try { localStorage.removeItem('currentUser'); } catch {}; router.push('/auth'); };
@@ -149,34 +139,22 @@ export default function GerenteDashboard() {
             } else if (modal.mode === 'rename-project' && modal.projectId != null) {
               await renameProject(modal.projectId, v);
             } else if (modal.mode === 'add-task' && modal.projectId != null) {
-              if (isClientOnlyMode()) { addLocalTask(modal.projectId, v); }
-              else { await fetch(`/api/crud/projects/${modal.projectId}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: v }) }); }
+              await fetch(`/api/crud/projects/${modal.projectId}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: v }) });
             } else if (modal.mode === 'rename-task' && modal.projectId != null && modal.taskId != null) {
-              if (isClientOnlyMode()) { renameLocalTask(modal.projectId, modal.taskId, v); }
-              else { await fetch(`/api/crud/projects/${modal.projectId}/tasks/${modal.taskId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: v }) }); }
+              await fetch(`/api/crud/projects/${modal.projectId}/tasks/${modal.taskId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: v }) });
             } else if (modal.mode === 'assign-task' && modal.projectId != null && modal.taskId != null) {
-              if (isClientOnlyMode()) {
-                const r = assignLocalTask(modal.projectId, modal.taskId, v);
-                if (!r.ok) { setModal(m => ({ ...m, error: r.error })); return; }
-              } else {
-                const res = await fetch(`/api/crud/projects/${modal.projectId}/tasks/${modal.taskId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assignedToName: v }) });
-                if (!res.ok) {
-                  const data = await res.json().catch(() => ({}));
-                  setModal(m => ({ ...m, error: data.error || 'Error al asignar' }));
-                  return; // mantener modal abierto
-                }
+              const res = await fetch(`/api/crud/projects/${modal.projectId}/tasks/${modal.taskId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assignedToName: v }) });
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setModal(m => ({ ...m, error: data.error || 'Error al asignar' }));
+                return; // mantener modal abierto
               }
             } else if (modal.mode === 'assign-task' && modal.projectId != null && modal.taskId == null) {
-              if (isClientOnlyMode()) {
-                const r = assignLocalProject(modal.projectId, v);
-                if (!r.ok) { setModal(m => ({ ...m, error: r.error })); return; }
-              } else {
-                const res = await fetch(`/api/crud/projects/${modal.projectId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assignedToName: v }) });
-                if (!res.ok) {
-                  const data = await res.json().catch(() => ({}));
-                  setModal(m => ({ ...m, error: data.error || 'Error al asignar' }));
-                  return; // mantener modal abierto
-                }
+              const res = await fetch(`/api/crud/projects/${modal.projectId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assignedToName: v }) });
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setModal(m => ({ ...m, error: data.error || 'Error al asignar' }));
+                return; // mantener modal abierto
               }
             }
           } finally {
@@ -198,16 +176,10 @@ function ProjectTasks({ project, onChanged, onOpenModal }: { project: Project; o
   const [assignTaskId, setAssignTaskId] = useState<number | null>(null);
 
   const loadProject = useCallback(async () => {
-    if (isClientOnlyMode()) {
-      const all = getLocalProjects();
-      const proj = all.find((p: Project) => p.id === projectId);
-      setTasks(proj?.tasks || []);
-    } else {
-      const res = await fetch('/api/crud/projects');
-      const data = await res.json();
-      const proj = (data.projects || []).find((p: Project) => p.id === projectId);
-      setTasks(proj?.tasks || []);
-    }
+    const res = await fetch('/api/crud/projects');
+    const data = await res.json();
+    const proj = (data.projects || []).find((p: Project) => p.id === projectId);
+    setTasks(proj?.tasks || []);
   }, [projectId]);
 
   useEffect(() => { loadProject(); }, [loadProject]);
@@ -217,21 +189,16 @@ function ProjectTasks({ project, onChanged, onOpenModal }: { project: Project; o
   const add = useCallback(async (taskTitle: string) => {
     const t = taskTitle.trim();
     if (!t) return;
-    if (isClientOnlyMode()) { addLocalTask(projectId, t); setTitle(''); await loadProject(); onChanged(); }
-    else {
-      const res = await fetch(`/api/crud/projects/${projectId}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t }) });
-      if (res.ok) { setTitle(''); await loadProject(); onChanged(); }
-    }
+    const res = await fetch(`/api/crud/projects/${projectId}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t }) });
+    if (res.ok) { setTitle(''); await loadProject(); onChanged(); }
   }, [projectId, loadProject, onChanged]);
 
   const toggle = async (tid: number, completed: boolean) => {
-    if (isClientOnlyMode()) { setLocalTaskCompleted(projectId, tid, completed); await loadProject(); onChanged(); return; }
     await fetch(`/api/crud/projects/${projectId}/tasks/${tid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed }) });
     await loadProject(); onChanged();
   };
 
   const remove = async (tid: number) => {
-    if (isClientOnlyMode()) { deleteLocalTask(projectId, tid); await loadProject(); onChanged(); return; }
     await fetch(`/api/crud/projects/${projectId}/tasks/${tid}`, { method: 'DELETE' });
     await loadProject(); onChanged();
   };
