@@ -11,7 +11,7 @@ export default function FormProyectoPage() {
     e.preventDefault();
     setError(null);
     try {
-      const res = await fetch('/api/projects/create', {
+  const res = await fetch('/api/crud/projects/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -19,8 +19,9 @@ export default function FormProyectoPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error');
       router.push('/gerente');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+      setError(message);
     }
   };
 

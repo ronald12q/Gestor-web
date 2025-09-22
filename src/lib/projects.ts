@@ -13,7 +13,7 @@ interface Project { id: number; name: string; assignedTo?: number; assignedToNam
 function readFile() {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch { return { projects: [] }; }
 }
-function writeFile(data: any) { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
+function writeFile(data: unknown) { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
 
 export function readProjects(): Project[] { return readFile().projects; }
 export function writeProjects(projects: Project[]) { writeFile({ projects }); }

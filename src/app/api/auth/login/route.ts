@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   const users: User[] = readUsers();
   const user = users.find((u: User) => u.email === email && u.password === password);
   if (!user) return NextResponse.json({ error: 'credenciales invalidas' }, { status: 401 });
-  const { password: _pw, ...safe } = user as any;
+
+  const safe = { id: user.id, name: user.name, email: user.email, role: user.role };
   return NextResponse.json({ user: safe });
 }

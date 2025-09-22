@@ -13,6 +13,6 @@ export async function POST(request: Request) {
   const id = nextUserId(users);
   const newUser: User = { id, name, email, password, role } as User;
   writeUsers([...users, newUser]);
-  const { password: _pw, ...safe } = newUser as any;
+  const safe = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
   return NextResponse.json({ user: safe }, { status: 201 });
 }

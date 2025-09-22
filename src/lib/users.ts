@@ -12,7 +12,7 @@ const filePath = path.join(process.cwd(), 'public', 'data', 'usuarios.json');
 function readFile() {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch { return { users: [] as User[] }; }
 }
-function writeFile(data: any) { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
+function writeFile(data: unknown) { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
 
 export function readUsers(): User[] { return readFile().users as User[]; }
 export function writeUsers(users: User[]) { writeFile({ users }); }

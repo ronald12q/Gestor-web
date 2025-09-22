@@ -60,7 +60,7 @@ export default function UsuarioDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Panel de usuario</h1>
-          {currentUser && <p className="text-gray-300">Bienvenido, {currentUser.name}</p>}
+          {currentUser && <p className="text-gray-300">Bienvenido, {currentUser.name} — Progreso: {percent}%</p>}
         </div>
   <button onClick={logout} className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-xl">Cerrar Sesión</button>
       </div>

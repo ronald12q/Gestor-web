@@ -6,31 +6,31 @@
  * - Asignar proyectos y tareas a usuarios existentes.
  * - Solo muestra proyectos creados por el gerente actual.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import InputModal from '@/components/InputModal';
 import IconButton from '@/components/IconButton';
 
 type Task = { id: number; title: string; completed: boolean; assignedToName?: string };
-type Project = { id: number; name: string; tasks: Task[]; createdByName?: string };
+type Project = { id: number; name: string; tasks: Task[]; createdByName?: string; assignedToName?: string };
 
 export default function GerenteDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [name, setName] = useState('');
+  // nombre local usado por formularios/inputs en páginas independientes
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<{name:string, role:string} | null>(null);
   type Mode = 'create-project' | 'rename-project' | 'add-task' | 'rename-task' | 'assign-task';
   const [modal, setModal] = useState<{ open: boolean; mode?: Mode; projectId?: number; taskId?: number; current?: string; error?: string }>({ open: false });
   const router = useRouter();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/crud/projects');
       const data = await res.json();
       setProjects(data.projects || []);
     } finally { setLoading(false); }
-  };
+  }, []);
 
   useEffect(() => {
     load();
@@ -38,7 +38,7 @@ export default function GerenteDashboard() {
       const u = localStorage.getItem('currentUser');
       if (u) setCurrentUser(JSON.parse(u));
     } catch {}
-  }, []);
+  }, [load]);
 
   const createProject = async (projectName: string) => {
     const name = projectName.trim();
@@ -55,7 +55,7 @@ export default function GerenteDashboard() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, createdByName: ownerName })
     });
-    if (res.ok) { setName(''); await load(); }
+  if (res.ok) { await load(); }
   };
   const renameProject = async (projectId: number, newName: string) => {
     const name = newName.trim();
@@ -63,10 +63,10 @@ export default function GerenteDashboard() {
     await fetch(`/api/crud/projects/${projectId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
     await load();
   };
-  const removeProject = async (projectId: number) => {
+  const removeProject = useCallback(async (projectId: number) => {
     await fetch(`/api/crud/projects/${projectId}`, { method: 'DELETE' });
     await load();
-  };
+  }, [load]);
 
   const logout = () => { try { localStorage.removeItem('currentUser'); } catch {}; router.push('/auth'); };
 
@@ -90,7 +90,7 @@ export default function GerenteDashboard() {
       </div>
       <h2 className="text-2xl font-semibold">Proyectos</h2>
       {loading && <p className="text-sm text-gray-500">Cargando...</p>}
-      {useMemo(() => {
+  {useMemo(() => {
         const norm = (s: string) => s.trim().toLowerCase();
         const owner = currentUser?.name ? norm(currentUser.name) : '';
         const owned = (projects || []).filter(p => p.createdByName && norm(p.createdByName) === owner);
@@ -109,7 +109,7 @@ export default function GerenteDashboard() {
                   <div>
                     <div className="font-semibold text-lg">{p.name}</div>
                     {p.createdByName && <div className="text-xs text-gray-400">Creado por {p.createdByName}</div>}
-                    {((p as any).assignedToName) && <div className="text-xs text-gray-400">Asignado a {(p as any).assignedToName}</div>}
+                    {p.assignedToName && <div className="text-xs text-gray-400">Asignado a {p.assignedToName}</div>}
                   </div>
                   <div className="flex gap-2">
                     <IconButton variant="green" icon={<PlusIcon />} aria-label="Añadir tarea" onClick={() => setModal({ open: true, mode: 'add-task', projectId: p.id })} />
@@ -123,7 +123,7 @@ export default function GerenteDashboard() {
             ))}
           </ul>
         );
-      }, [projects, currentUser])}
+      }, [projects, currentUser, load, removeProject])}
       <InputModal
         open={modal.open}
         title={modal.mode === 'create-project' ? 'Nombre del proyecto' : modal.mode === 'rename-project' ? 'Renombrar proyecto' : modal.mode === 'add-task' ? 'Nueva tarea' : modal.mode === 'rename-task' ? 'Renombrar tarea' : 'Asignar'}
@@ -178,26 +178,26 @@ function ProjectTasks({ project, onChanged, onOpenModal }: { project: Project; o
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignTaskId, setAssignTaskId] = useState<number | null>(null);
 
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     const res = await fetch('/api/crud/projects');
     const data = await res.json();
     const proj = (data.projects || []).find((p: Project) => p.id === projectId);
     setTasks(proj?.tasks || []);
-  };
+  }, [projectId]);
 
-  useEffect(() => { loadProject(); }, []);
+  useEffect(() => { loadProject(); }, [loadProject]);
   // Sincronizar tareas con actualizaciones del proyecto padre para que nuevas tareas aparezcan sin recarga completa
   useEffect(() => { setTasks(project.tasks || []); }, [project.tasks]);
 
-  const add = async (taskTitle: string) => {
-    const title = taskTitle.trim();
-    if (!title) return;
+  const add = useCallback(async (taskTitle: string) => {
+    const t = taskTitle.trim();
+    if (!t) return;
     const res = await fetch(`/api/crud/projects/${projectId}/tasks`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title })
+      body: JSON.stringify({ title: t })
     });
     if (res.ok) { setTitle(''); await loadProject(); onChanged(); }
-  };
+  }, [projectId, loadProject, onChanged]);
 
   const toggle = async (tid: number, completed: boolean) => {
     await fetch(`/api/crud/projects/${projectId}/tasks/${tid}`, {
@@ -212,7 +212,7 @@ function ProjectTasks({ project, onChanged, onOpenModal }: { project: Project; o
     await loadProject(); onChanged();
   };
 
-  const assign = (tid: number) => { setAssignTaskId(tid); setAssignOpen(true); };
+  const assign = useCallback((tid: number) => { setAssignTaskId(tid); setAssignOpen(true); }, []);
   const onAssignSubmit = async (value: string) => {
     if (assignTaskId == null) return setAssignOpen(false);
     await fetch(`/api/crud/projects/${projectId}/tasks/${assignTaskId}`, {
