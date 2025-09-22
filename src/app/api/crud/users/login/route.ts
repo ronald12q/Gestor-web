@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readUsers, User } from '@/lib/users';
 
-// POST /api/crud/users/login — autenticación simple por email/contraseña
+// login — autenticación simple por email/contraseña
 export async function POST(request: Request) {
 	const body = await request.json();
 	const { email, password } = body || {};

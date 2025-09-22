@@ -26,8 +26,9 @@ export default function LoginForm() {
     });
     const data = await res.json();
     if (!res.ok) return setError(data.error || 'Error');
-    try { localStorage.setItem('currentUser', JSON.stringify(data.user)); } catch {}
-    window.location.href = data.user.role === 'gerente' ? '/gerente' : '/usuario';
+    const dest = data.user.role === 'gerente' ? '/gerente' : '/usuario';
+    const url = `${dest}?name=${encodeURIComponent(data.user.name || '')}`;
+    window.location.href = url;
   };
 
   const badgeClasses = role === 'gerente'

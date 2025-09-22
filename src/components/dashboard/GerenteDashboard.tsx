@@ -7,7 +7,7 @@
  * - Solo muestra proyectos creados por el gerente actual.
  */
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import InputModal from '@/components/InputModal';
 import IconButton from '@/components/IconButton';
 
@@ -18,7 +18,8 @@ export default function GerenteDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   // nombre local usado por formularios/inputs en páginas independientes
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{name:string, role:string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{name:string, role?:string} | null>(null);
+  const search = useSearchParams();
   type Mode = 'create-project' | 'rename-project' | 'add-task' | 'rename-task' | 'assign-task';
   const [modal, setModal] = useState<{ open: boolean; mode?: Mode; projectId?: number; taskId?: number; current?: string; error?: string }>({ open: false });
   const router = useRouter();
@@ -34,23 +35,15 @@ export default function GerenteDashboard() {
 
   useEffect(() => {
     load();
-    try {
-      const u = localStorage.getItem('currentUser');
-      if (u) setCurrentUser(JSON.parse(u));
-    } catch {}
-  }, [load]);
+    const name = (search.get('name') || '').trim();
+    if (name) setCurrentUser({ name });
+  }, [load, search]);
 
   const createProject = async (projectName: string) => {
     const name = projectName.trim();
     if (!name) return;
-  // Derivar propietario desde el estado o localStorage como respaldo
-    let ownerName = currentUser?.name || '';
-    if (!ownerName) {
-      try {
-        const raw = localStorage.getItem('currentUser');
-        if (raw) ownerName = (JSON.parse(raw)?.name as string) || '';
-      } catch {}
-    }
+  // Derivar propietario desde el estado
+    const ownerName = currentUser?.name || '';
     const res = await fetch('/api/crud/projects/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, createdByName: ownerName }) });
     if (res.ok) { await load(); }
   };
@@ -65,7 +58,7 @@ export default function GerenteDashboard() {
     await load();
   }, [load]);
 
-  const logout = () => { try { localStorage.removeItem('currentUser'); } catch {}; router.push('/auth'); };
+  const logout = () => { router.push('/auth'); };
 
   return (
   <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -246,7 +239,7 @@ function ProjectTasks({ project, onChanged, onOpenModal }: { project: Project; o
   );
 }
 
-// Iconos inline simples para evitar dependencias externas
+
 function PlusIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

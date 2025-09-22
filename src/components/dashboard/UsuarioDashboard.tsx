@@ -7,14 +7,15 @@
  * - Muestra progreso y conteo del proyecto completo y de las tareas propias.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 type Task = { id: number; title: string; completed: boolean; assignedToName?: string };
 type Project = { id: number; name: string; tasks: Task[]; assignedToName?: string };
 
 export default function UsuarioDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentUser, setCurrentUser] = useState<{name:string, role:string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{name:string, role?:string} | null>(null);
+  const search = useSearchParams();
   const router = useRouter();
 
   const load = async () => {
@@ -24,13 +25,11 @@ export default function UsuarioDashboard() {
   };
   useEffect(() => {
     load();
-    try {
-      const u = localStorage.getItem('currentUser');
-      if (u) setCurrentUser(JSON.parse(u));
-    } catch {}
+    const name = (search.get('name') || '').trim();
+    if (name) setCurrentUser({ name });
   }, []);
 
-  const logout = () => { try { localStorage.removeItem('currentUser'); } catch {}; router.push('/auth'); };
+  const logout = () => { router.push('/auth'); };
 
   
   const filtered = useMemo(() => {
