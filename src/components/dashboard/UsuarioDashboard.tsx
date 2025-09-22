@@ -8,6 +8,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { isClientOnlyMode, getProjects as getLocalProjects, setTaskCompleted as setLocalTaskCompleted } from '@/lib/persistence.client';
 
 type Task = { id: number; title: string; completed: boolean; assignedToName?: string };
 type Project = { id: number; name: string; tasks: Task[]; assignedToName?: string };
@@ -18,9 +19,13 @@ export default function UsuarioDashboard() {
   const router = useRouter();
 
   const load = async () => {
-    const res = await fetch('/api/crud/projects');
-    const data = await res.json();
-    setProjects(data.projects || []);
+    if (isClientOnlyMode()) {
+      setProjects(getLocalProjects());
+    } else {
+      const res = await fetch('/api/crud/projects');
+      const data = await res.json();
+      setProjects(data.projects || []);
+    }
   };
   useEffect(() => {
     load();
@@ -106,8 +111,13 @@ export default function UsuarioDashboard() {
                         <button
                           title={t.completed ? 'Marcar pendiente' : 'Marcar completada'}
                           onClick={async () => {
-                            await fetch(`/api/crud/projects/${p.id}/tasks/${t.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: !t.completed }) });
-                            await load();
+                            if (isClientOnlyMode()) {
+                              setLocalTaskCompleted(p.id, t.id, !t.completed);
+                              await load();
+                            } else {
+                              await fetch(`/api/crud/projects/${p.id}/tasks/${t.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: !t.completed }) });
+                              await load();
+                            }
                           }}
                           className={`px-3 py-2 rounded-xl ${t.completed ? 'bg-green-700 text-white' : 'bg-slate-700 text-slate-200'} hover:opacity-90`}
                         >

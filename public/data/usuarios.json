@@ -1,3 +1,11 @@
 {
-  "users": []
+  "users": [
+    {
+      "id": 1,
+      "name": "gerente",
+      "email": "gerente@local.com",
+      "password": "123456",
+      "role": "gerente"
+    }
+  ]
 }
