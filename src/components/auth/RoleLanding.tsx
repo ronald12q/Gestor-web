@@ -7,7 +7,7 @@ export default function RoleLanding() {
     <div className="min-h-[100dvh] grid place-items-center px-4 sm:px-8">
   <div className="w-full max-w-5xl rounded-3xl border border-slate-700/50 bg-slate-900/60 p-6 sm:p-8 shadow-2xl shadow-black/40">
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-100 mb-2 leading-none">
-          Gestor de Tareas
+          Gestor de Tareas y proyectos
         </h1>
         <p className="text-slate-400 text-lg mb-8">Selecciona tu tipo de cuenta</p>
 

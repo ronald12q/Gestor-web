@@ -1,6 +1,6 @@
 /**
  * Lib de proyectos
- * Lectura/escritura sobre public/data/proyectos.json archivo que sirve de BD para proyectos/tareas
+ * Lectura/escritura sobre public/data/proyectos.json archivo que sirve de BD para proyectos/tareas1
  */
 import fs from 'fs';
 import path from 'path';

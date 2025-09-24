@@ -13,6 +13,62 @@
       "email": "Usuario@test.com",
       "password": "123456",
       "role": "usuario"
+    },
+    {
+      "id": 3,
+      "name": "Gerente2",
+      "email": "Gerente2@local.com",
+      "password": "12345",
+      "role": "gerente"
+    },
+    {
+      "id": 4,
+      "name": "Ra",
+      "email": "Ra@local.com",
+      "password": "abc",
+      "role": "gerente"
+    },
+    {
+      "id": 5,
+      "name": "usuarioa",
+      "email": "usuarioa@local.com",
+      "password": "abc",
+      "role": "usuario"
+    },
+    {
+      "id": 6,
+      "name": "RW",
+      "email": "RW@LOCAL.COM",
+      "password": "ABC",
+      "role": "gerente"
+    },
+    {
+      "id": 7,
+      "name": "RE",
+      "email": "RE@LOCAL.COM",
+      "password": "ABC",
+      "role": "usuario"
+    },
+    {
+      "id": 8,
+      "name": "xxz\\x",
+      "email": "xz\\xz\\x",
+      "password": "xz\\xz\\",
+      "role": "gerente"
+    },
+    {
+      "id": 9,
+      "name": "as",
+      "email": "as",
+      "password": "as",
+      "role": "gerente"
+    },
+    {
+      "id": 10,
+      "name": "dasda",
+      "email": "sdasdsa",
+      "password": "dasdsa",
+      "role": "usuario"
     }
   ]
 }

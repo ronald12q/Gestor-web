@@ -12,6 +12,43 @@
         }
       ],
       "createdByName": "gerente"
+    },
+    {
+      "id": 2,
+      "name": "Hacer la Cena",
+      "tasks": [],
+      "createdByName": "Gerente2"
+    },
+    {
+      "id": 3,
+      "name": "Hacer la cena",
+      "tasks": [
+        {
+          "id": 1,
+          "title": "Encender la cocina",
+          "completed": false
+        }
+      ],
+      "createdByName": "Ra"
+    },
+    {
+      "id": 4,
+      "name": "Hacer la cena",
+      "tasks": [
+        {
+          "id": 1,
+          "title": "Comprar los ingredientes",
+          "completed": true,
+          "assignedToName": "RE"
+        },
+        {
+          "id": 2,
+          "title": "COCINAR",
+          "completed": true
+        }
+      ],
+      "createdByName": "RW",
+      "assignedToName": "RE"
     }
   ]
 }
